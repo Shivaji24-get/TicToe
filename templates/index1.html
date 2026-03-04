@@ -1,0 +1,125 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tic Tac Toe AI</title>
+    <style>
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            gap: 5px;
+            margin: 20px auto;
+            width: 310px;
+        }
+        .cell {
+            width: 100px;
+            height: 100px;
+            border: 2px solid #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            cursor: pointer;
+        }
+        .cell:hover {
+            background-color: #f0f0f0;
+        }
+        .controls {
+            text-align: center;
+            margin: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        #message {
+            text-align: center;
+            font-size: 24px;
+            margin: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="board" id="board"></div>
+    <div id="message"></div>
+    <div class="controls">
+        <button onclick="resetGame()">New Game</button>
+    </div>
+
+    <script>
+        let board = Array(3).fill().map(() => Array(3).fill(0));
+
+        function createBoard() {
+            const boardDiv = document.getElementById('board');
+            boardDiv.innerHTML = '';
+            for (let i = 0; i < 3; i++) {
+                for (let j = 0; j < 3; j++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.onclick = () => makeMove(i, j);
+                    cell.dataset.row = i;
+                    cell.dataset.col = j;
+                    boardDiv.appendChild(cell);
+                }
+            }
+            updateBoard();
+        }
+
+        function updateBoard() {
+            const cells = document.querySelectorAll('.cell');
+            cells.forEach(cell => {
+                const i = cell.dataset.row;
+                const j = cell.dataset.col;
+                cell.textContent = board[i][j] === 1 ? 'X' : 
+                                 board[i][j] === -1 ? 'O' : '';
+            });
+        }
+
+        async function makeMove(row, col) {
+            if (board[row][col] !== 0) return;
+
+            const response = await fetch('/make_move', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ row, col })
+            });
+
+            const data = await response.json();
+            if (data.error) {
+                alert(data.error);
+                return;
+            }
+
+            board = data.board;
+            updateBoard();
+
+            if (data.game_over) {
+                const message = document.getElementById('message');
+                if (data.winner === 1) {
+                    message.textContent = 'AI Wins!';
+                } else if (data.winner === -1) {
+                    message.textContent = 'You Win!';
+                } else {
+                    message.textContent = "It's a Draw!";
+                }
+            }
+        }
+
+        async function resetGame() {
+            const response = await fetch('/reset', {
+                method: 'POST'
+            });
+            const data = await response.json();
+            board = data.board;
+            updateBoard();
+            document.getElementById('message').textContent = '';
+        }
+
+        // Initialize the game board
+        createBoard();
+    </script>
+</body>
+</html>

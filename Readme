@@ -1,0 +1,21 @@
+To run the application:
+
+1. Create a project directory with this structure:
+```
+project/
+  ├── app.py
+  └── templates/
+      └── index.html
+```
+
+2. Install requirements:
+```bash
+pip install flask numpy
+```
+
+3. Run the server:
+```bash
+python app.py
+```
+
+4. Open http://localhost:5000 in your browser to play.
